@@ -11,6 +11,5 @@ __pycache__/
 *.sqlite3
 *.zip
 tests/
-static/
 README.md
 Client Setup Instructions - TypeTrack.txt
