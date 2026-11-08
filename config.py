@@ -3,6 +3,7 @@ import sys
 from datetime import timedelta
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
 
 
 def _runtime_dir():
@@ -24,9 +25,12 @@ def _db_uri():
     database_url = os.getenv("DATABASE_URL")
     if database_url:
         if database_url.startswith("postgres://"):
-            return "postgresql+psycopg://" + database_url[len("postgres://"):]
-        if database_url.startswith("postgresql://"):
-            return "postgresql+psycopg://" + database_url[len("postgresql://"):]
+            database_url = "postgresql+psycopg://" + database_url[len("postgres://"):]
+        elif database_url.startswith("postgresql://"):
+            database_url = "postgresql+psycopg://" + database_url[len("postgresql://"):]
+        if os.getenv("VERCEL") == "1" and database_url.startswith("postgresql+psycopg://"):
+            url = make_url(database_url)
+            return url.set(query={**url.query, "sslmode": "require"}).render_as_string(hide_password=False)
         return database_url
     # With no database settings, the institute PC uses a file in data/.
     if os.getenv("DB_PASSWORD"):
