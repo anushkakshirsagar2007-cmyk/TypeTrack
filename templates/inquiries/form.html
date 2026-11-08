@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select %}
+{% block title %}{{ 'Edit inquiry' if i else 'New inquiry' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Edit inquiry' if i else 'New inquiry' }}</h1><p>Takes less than a minute.</p></div></div>
+<form method="post" class="card" data-validate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="card-body"><div class="row g-3">
+ {{ field('Name', 'name', d.name if d else (i.name if i else ''), required=True, placeholder='Full name') }}
+ {{ field('Phone number', 'phone', d.phone if d else (i.phone if i else ''), 'tel', True, '10-digit mobile number') }}
+ {{ field('Email', 'email', d.email if d else (i.email if i else ''), 'email', placeholder='Optional') }}
+ {{ select('Interested course', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, d.course_id if d else (i.course_id if i else ''), blank='Not decided') }}
+ {{ select('Preferred batch timing', 'preferred_timing', timings|zip(timings)|list, d.preferred_timing if d else (i.preferred_timing if i else ''), blank='No preference') }}
+ {{ select('Inquiry source', 'source', sources|zip(sources)|list, d.source if d else (i.source if i else ''), blank='How did they find us?') }}
+ {{ field('Inquiry date', 'inquiry_date', d.inquiry_date if d else (i.inquiry_date if i else today), 'date', True) }}
+ {{ field('Next follow-up date', 'follow_up_date', d.follow_up_date if d else (i.follow_up_date if i else ''), 'date') }}
+ {{ select('Status', 'status', statuses|zip(statuses)|list, d.status if d else (i.status if i else 'New'), True, blank=None) }}
+ <div class="col-12"><label class="form-label" for="remarks">Remarks</label><textarea class="form-control" id="remarks" name="remarks" rows="3" placeholder="Anything useful to remember">{{ d.remarks if d else (i.remarks if i else '') or '' }}</textarea></div>
+</div></div>
+<div class="card-footer d-flex gap-2 justify-content-end"><a class="btn btn-light btn-lg" href="{{ url_for('inquiries.index') }}">Cancel</a><button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Save inquiry</button></div>
+</form>
+{% endblock %}

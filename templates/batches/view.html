@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, empty %}
+{% block title %}{{ b.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ b.name }}</h1><p>{{ b.course.name }} &middot; {{ b.timing }} &middot; {{ badge(b.status) }}</p></div>
+ <div class="d-flex gap-2"><a class="btn btn-primary" href="{{ url_for('attendance.mark', batch_id=b.id) }}"><i class="bi bi-calendar-check"></i> Mark attendance</a>
+ {% if current_user.is_owner %}<a class="btn btn-outline-primary" href="{{ url_for('batches.edit', id=b.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+ <form method="post" action="{{ url_for('batches.delete', id=b.id) }}" data-confirm="Delete this batch?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>{% endif %}</div></div>
+<div class="card"><div class="card-body"><h2 class="card-title">Students ({{ b.filled }} active of {{ b.capacity }} seats)</h2>
+{% if students %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Status</th></tr></thead><tbody>
+{% for s in students %}<tr><td>{{ s.student_code }}</td><td><a href="{{ url_for('students.profile', id=s.id) }}">{{ s.name }}</a></td><td>{{ s.phone }}</td><td>{{ badge('Active' if s.active else 'Inactive') }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}{{ empty('bi-people', 'No students in this batch', 'Assign this batch while adding or editing a student.') }}{% endif %}</div></div>
+{% endblock %}

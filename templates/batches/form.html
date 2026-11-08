@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select %}
+{% block title %}{{ 'Edit batch' if b and b.id else 'New batch' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Edit batch' if b else 'New batch' }}</h1></div></div>
+<form method="post" class="card" data-validate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="card-body"><div class="row g-3">
+ {{ field('Batch name', 'name', d.name if d else (b.name if b else ''), required=True, placeholder='e.g. Morning 8 AM') }}
+ {{ select('Course', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, d.course_id if d else (b.course_id if b else ''), True) }}
+ {{ field('Instructor name', 'instructor', d.instructor if d else (b.instructor if b else ''), placeholder='Teacher name') }}
+ {{ field('Batch start date', 'start_date', d.start_date if d else (b.start_date if b else today), 'date', True) }}
+ {{ field('Start time', 'start_time', (d.start_time if d else (b.start_time if b else '')).strftime('%H:%M') if (d.start_time if d else (b.start_time if b else '')) else '', 'time', True) }}
+ {{ field('End time', 'end_time', (d.end_time if d else (b.end_time if b else '')).strftime('%H:%M') if (d.end_time if d else (b.end_time if b else '')) else '', 'time', True) }}
+ {{ field('Student capacity', 'capacity', d.capacity if d else (b.capacity if b else 20), 'number', True, attrs='min="1" max="500"') }}
+ {{ select('Status', 'status', statuses|zip(statuses)|list, d.status if d else (b.status if b else 'Active'), True, blank=None) }}
+</div></div><div class="card-footer d-flex gap-2 justify-content-end"><a class="btn btn-light btn-lg" href="{{ url_for('batches.index') }}">Cancel</a><button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Save batch</button></div></form>
+{% endblock %}

@@ -1,0 +1,16 @@
+.env
+.env.*
+venv/
+.venv/
+data/
+instance/
+__pycache__/
+.pytest_cache/
+*.db
+*.sqlite
+*.sqlite3
+*.zip
+tests/
+static/
+README.md
+Client Setup Instructions - TypeTrack.txt

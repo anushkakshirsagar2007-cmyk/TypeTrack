@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty, badge %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Search results</h1><p>{% if q %}for "{{ q }}"{% else %}Type a name, ID or phone number in the search bar.{% endif %}</p></div></div>
+{% if q %}
+<div class="card mb-3"><div class="card-body"><h2 class="card-title">Students ({{ studs|length }})</h2>
+{% for s in studs %}<a class="list-row" href="{{ url_for('students.profile', id=s.id) }}"><div><b>{{ s.name }}</b><small>{{ s.student_code }} &middot; {{ s.phone }}</small></div>{{ badge('Active' if s.active else 'Inactive') }}</a>
+{% else %}<p class="text-muted small mb-0">No students found.</p>{% endfor %}</div></div>
+<div class="card"><div class="card-body"><h2 class="card-title">Inquiries ({{ inqs|length }})</h2>
+{% for i in inqs %}<a class="list-row" href="{{ url_for('inquiries.view', id=i.id) }}"><div><b>{{ i.name }}</b><small>{{ i.phone }} &middot; {{ i.inquiry_date|dmy }}</small></div>{{ badge(i.status) }}</a>
+{% else %}<p class="text-muted small mb-0">No inquiries found.</p>{% endfor %}</div></div>
+{% endif %}
+{% endblock %}

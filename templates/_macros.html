@@ -1,0 +1,40 @@
+{% macro field(label, name, value='', type='text', required=False, placeholder='', col='col-md-6', attrs='') %}
+<div class="{{ col }}">
+  <label class="form-label" for="{{ name }}">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+  <input class="form-control" type="{{ type }}" id="{{ name }}" name="{{ name }}" value="{{ value if value is not none else '' }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {{ attrs|safe }}>
+</div>
+{% endmacro %}
+
+{% macro select(label, name, options, selected='', required=False, col='col-md-6', blank='Select...', attrs='') %}
+<div class="{{ col }}">
+  <label class="form-label" for="{{ name }}">{{ label }}{% if required %} <span class="text-danger">*</span>{% endif %}</label>
+  <select class="form-select" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %} {{ attrs|safe }}>
+    {% if blank %}<option value="">{{ blank }}</option>{% endif %}
+    {% for v, t in options %}<option value="{{ v }}" {% if selected|string == v|string %}selected{% endif %}>{{ t }}</option>{% endfor %}
+  </select>
+</div>
+{% endmacro %}
+
+{% macro empty(icon, title, text, url=None, btn=None) %}
+<div class="empty-state"><i class="bi {{ icon }}"></i><h6>{{ title }}</h6><p>{{ text }}</p>
+{% if url %}<a href="{{ url }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> {{ btn }}</a>{% endif %}</div>
+{% endmacro %}
+
+{% macro pager(p) %}
+{% if p.pages > 1 %}
+<nav class="pt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <small class="text-muted">Showing {{ p.items|length }} of {{ p.total }}</small>
+  <ul class="pagination pagination-sm mb-0">
+    {% for n in p.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+      {% if n %}<li class="page-item {{ 'active' if n == p.page }}"><a class="page-link" href="{{ page_url(n) }}">{{ n }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">&hellip;</span></li>{% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro badge(text) %}
+{% set c = {'Paid':'success','Partial':'warning','Unpaid':'danger','Active':'success','Inactive':'secondary','Completed':'secondary','New':'primary','Contacted':'info','Interested':'warning','Joined':'success','Not Interested':'secondary','Present':'success','Absent':'danger','Leave':'warning'} %}
+<span class="badge text-bg-{{ c.get(text, 'secondary') }}">{{ text }}</span>
+{% endmacro %}

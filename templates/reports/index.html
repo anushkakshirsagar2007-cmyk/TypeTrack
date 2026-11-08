@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import select, empty %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reports</h1><p>Filter, then download as Excel or PDF.</p></div>
+ <div class="d-flex gap-2"><a class="btn btn-success btn-lg" href="{{ request.full_path ~ ('&' if f else '') ~ 'export=xlsx' }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+ <a class="btn btn-danger btn-lg" href="{{ request.full_path ~ ('&' if f else '') ~ 'export=pdf' }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a></div></div>
+<ul class="nav nav-pills report-tabs mb-3">{% for k, t in reports.items() %}<li class="nav-item"><a class="nav-link {{ 'active' if k == kind }}" href="{{ url_for('reports.index', type=k) }}">{{ t }}</a></li>{% endfor %}</ul>
+<div class="card mb-3"><div class="card-body"><form class="row g-2" method="get" data-no-loader><input type="hidden" name="type" value="{{ kind }}">
+ <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name, ID, phone"></div>
+ {% if kind in ('students','batches','attendance') %}{{ select('', 'batch_id', batches|map(attribute='id')|zip(batches|map(attribute='name'))|list, f.get('batch_id',''), col='col-6 col-lg-2', blank='All batches') }}{% endif %}
+ {% if kind == 'inquiries' %}{{ select('', 'status', statuses|zip(statuses)|list, f.get('status',''), col='col-6 col-lg-2', blank='All statuses') }}{% endif %}
+ {% if kind not in ('batches','pending') %}
+ <div class="col-6 col-lg-2"><input type="date" class="form-control" name="start" value="{{ f.get('start','') }}" title="From date"></div>
+ <div class="col-6 col-lg-2"><input type="date" class="form-control" name="end" value="{{ f.get('end','') }}" title="To date"></div>{% endif %}
+ <div class="col-12 col-lg-3 d-flex gap-2"><button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> Apply</button><a class="btn btn-light" href="{{ url_for('reports.index', type=kind) }}">Reset</a></div></form></div></div>
+<div class="card"><div class="card-body"><h2 class="card-title">{{ reports[kind] }} <small class="text-muted fw-normal">({{ rows|length }} rows)</small></h2>
+{% if rows %}<div class="table-responsive"><table class="table table-sm table-striped align-middle"><thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+{% else %}{{ empty('bi-bar-chart', 'No data for these filters', 'Try a wider date range or clear the search.') }}{% endif %}</div></div>
+{% endblock %}

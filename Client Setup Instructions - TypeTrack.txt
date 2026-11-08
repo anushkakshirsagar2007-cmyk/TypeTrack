@@ -1,0 +1,71 @@
+TYPETRACK - VERCEL SETUP
+Shri Datta Typing Institute
+
+We will host the TypeTrack web app on Vercel and use Supabase for its database and logo storage. Follow one step at a time. Never send passwords, connection strings or secret keys in chat or commit them to GitHub.
+
+STEP 1 - PREPARE SUPABASE
+
+1. In Supabase, open Storage and create a bucket named typetrack-uploads. Set the bucket to Private.
+2. Click Connect and select the Transaction pooler connection string for PostgreSQL.
+3. Keep the connection string private. Make sure it uses TLS (sslmode=require). Do not paste it into GitHub.
+4. In Supabase Project Settings > API Keys, locate the service_role key (it may be labelled secret). Keep it private; it gives server-side access to your project.
+
+STEP 2 - PUT THE APP IN A PRIVATE GITHUB REPOSITORY
+
+1. Use the updated TypeTrack project folder.
+2. Create a private GitHub repository and upload the project files from the TypeTrack folder.
+3. Do not upload .env, database files, venv, real student data or passwords. The .gitignore file excludes these. Vercel ignores desktop launchers, local-only files and the duplicate static folder during deployment.
+
+STEP 3 - CREATE THE VERCEL PROJECT
+
+1. Sign in to Vercel and choose Add New > Project.
+2. Import the private TypeTrack GitHub repository and deploy from its root folder (the folder containing app.py).
+3. Vercel detects the Flask application automatically. No start command is needed.
+
+STEP 4 - ADD PRIVATE VERCEL ENVIRONMENT VARIABLES
+
+In Vercel, open the project Settings > Environment Variables. Add these for Production:
+
+- DATABASE_URL: the Supabase Transaction pooler connection string.
+- SUPABASE_URL: https://YOUR_PROJECT_REF.supabase.co
+- SUPABASE_SERVICE_ROLE_KEY: the private service_role key from Supabase.
+- SUPABASE_STORAGE_BUCKET: typetrack-uploads
+- SECRET_KEY: a newly generated random value of at least 32 characters.
+- SESSION_COOKIE_SECURE: 1
+- OWNER_NAME: Institute Owner (or the owner's name).
+- OWNER_USERNAME: a private initial owner login name.
+- OWNER_PASSWORD: a unique password of at least 12 characters.
+- INSTITUTE_NAME: Shri Datta Typing Institute.
+- INSTITUTE_ADDRESS: Main Road Khapad Bazar, Akkalkot, Tal. Akkalkot, Dist. Solapur, 413216
+- INSTITUTE_PHONE: 7055301090, 8442266037
+- INSTITUTE_EMAIL: adiamdure777@gmail.com
+
+Use the complete connection URL copied from Supabase, including the correct host, port and username. If the database password contains reserved URL characters, URL-encode them before using the URI. Do not use the example placeholders literally.
+
+STEP 5 - DEPLOY AND CREATE THE TABLES
+
+1. After adding environment variables, redeploy from Vercel.
+2. On the computer with the project files, install/use the Vercel CLI and link this folder to the Vercel project with "vercel link". Sign in when asked.
+3. From the project folder run:
+   vercel env run -e production -- python -m flask --app app init-db
+   This creates the tables and first owner in Supabase. Run it once for the new database. Never run the demo-data command on the live project.
+
+STEP 6 - CHECK THE LIVE APP
+
+1. Open the Vercel HTTPS URL and sign in using the owner login.
+2. Change the owner password if asked; add courses, batches and individual staff accounts.
+3. Open Settings > Institute Profile, check the details, upload the logo and save.
+4. Test adding a record and generating a receipt. Check that the logo appears in the app and receipt.
+5. Set up Supabase backups and test restoring them before entering real student or payment data.
+
+IMPORTANT
+
+- Never upload .env or put secrets in GitHub. Enter hosting secrets only in Vercel's private Environment Variables settings.
+- Never put the Supabase service_role key in browser code or share it with staff.
+- Student, inquiry, attendance and payment data are stored in Supabase PostgreSQL. Logos are stored in the private Supabase Storage bucket.
+- Vercel's local filesystem is temporary; the app is configured to use Supabase Storage for logos.
+- Back up the database before app updates. TypeTrack does not currently have an automatic database migration workflow.
+- Do not use the app for real records until HTTPS, login, logo storage and backups have been tested.
+
+Regards,
+TypeTrack Setup

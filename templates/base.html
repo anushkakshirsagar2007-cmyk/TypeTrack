@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}TypeTrack{% endblock %} | TypeTrack</title>
+<link href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='vendor/bootstrap-icons.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+{% set ep = request.endpoint or '' %}
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{{ url_for('dashboard.index') }}">
+      {% if inst and inst.logo %}<img src="{{ url_for('uploaded_file', name=inst.logo) }}" alt="Logo">{% else %}<span class="brand-mark"><i class="bi bi-keyboard"></i></span>{% endif %}
+      <span class="brand-text">{{ inst.name if inst else 'TypeTrack' }}</span>
+    </a>
+    <nav class="nav flex-column">
+      <a class="nav-link {{ 'active' if ep.startswith('dashboard') }}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></a>
+      <a class="nav-link {{ 'active' if ep.startswith('inquiries') }}" href="{{ url_for('inquiries.index') }}"><i class="bi bi-chat-dots"></i><span>Inquiries</span></a>
+      <a class="nav-link {{ 'active' if ep.startswith('students') }}" href="{{ url_for('students.index') }}"><i class="bi bi-people"></i><span>Students</span></a>
+      <a class="nav-link {{ 'active' if ep.startswith('batches') }}" href="{{ url_for('batches.index') }}"><i class="bi bi-collection"></i><span>Batches</span></a>
+      <a class="nav-link {{ 'active' if ep.startswith('attendance') }}" href="{{ url_for('attendance.mark') }}"><i class="bi bi-calendar-check"></i><span>Attendance</span></a>
+      <a class="nav-link {{ 'active' if ep.startswith('fees') }}" href="{{ url_for('fees.index') }}"><i class="bi bi-cash-stack"></i><span>Fees &amp; Payments</span></a>
+      {% if current_user.is_owner %}
+      <a class="nav-link {{ 'active' if ep.startswith('reports') }}" href="{{ url_for('reports.index') }}"><i class="bi bi-bar-chart-line"></i><span>Reports</span></a>
+      <div class="nav-title">Settings</div>
+      <a class="nav-link {{ 'active' if ep == 'settings.institute' }}" href="{{ url_for('settings.institute') }}"><i class="bi bi-building"></i><span>Institute profile</span></a>
+      <a class="nav-link {{ 'active' if ep == 'settings.courses' }}" href="{{ url_for('settings.courses') }}"><i class="bi bi-journal-text"></i><span>Courses</span></a>
+      <a class="nav-link {{ 'active' if ep == 'settings.users' }}" href="{{ url_for('settings.users') }}"><i class="bi bi-person-gear"></i><span>Users</span></a>
+      {% endif %}
+      <a class="nav-link {{ 'active' if ep == 'settings.password' }}" href="{{ url_for('settings.password') }}"><i class="bi bi-key"></i><span>Change password</span></a>
+    </nav>
+  </aside>
+  <div class="sidebar-backdrop" id="backdrop"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-icon" id="sidebarToggle" type="button" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+      <form class="global-search" action="{{ url_for('search.page') }}" method="get" data-no-loader autocomplete="off">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" id="globalSearch" class="form-control" placeholder="Search students or inquiries by name, ID or phone" data-api="{{ url_for('search.api') }}">
+        <div class="search-results" id="searchResults"></div>
+      </form>
+      <div class="dropdown">
+        <button class="btn btn-icon position-relative" data-bs-toggle="dropdown" aria-label="Notifications"><i class="bi bi-bell"></i>
+          {% if notifs %}<span class="notif-dot">{{ notifs|length }}</span>{% endif %}</button>
+        <div class="dropdown-menu dropdown-menu-end notif-menu p-0">
+          <div class="p-3 border-bottom fw-bold">Notifications</div>
+          {% for n in notifs %}
+          <a class="dropdown-item notif-item" href="{{ n.url }}"><i class="bi {{ n.icon }} text-{{ n.level }}"></i><span>{{ n.text }}</span></a>
+          {% else %}<div class="p-3 text-muted small">You are all caught up.</div>{% endfor %}
+          <a class="dropdown-item text-center py-2 border-top small fw-semibold" href="{{ url_for('search.notifications') }}">View all</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="btn user-chip" data-bs-toggle="dropdown"><span class="avatar">{{ current_user.name[:1]|upper }}</span><span class="d-none d-md-inline">{{ current_user.name }}<small>{{ current_user.role|capitalize }}</small></span></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="{{ url_for('settings.password') }}"><i class="bi bi-key me-2"></i>Change password</a></li>
+          <li><form method="post" action="{{ url_for('auth.logout') }}" data-no-loader><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="dropdown-item" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Log out</button></form></li>
+        </ul>
+      </div>
+    </header>
+    <main class="content">{% block content %}{% endblock %}</main>
+  </div>
+</div>
+{% else %}
+{% block public %}{% endblock %}
+{% endif %}
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+{% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, msg in msgs %}
+  <div class="toast align-items-center text-bg-{{ cat if cat in ['success','danger','warning','info'] else 'primary' }} border-0" role="alert" data-bs-delay="5000">
+    <div class="d-flex"><div class="toast-body">{{ msg }}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>
+{% endfor %}{% endwith %}
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <div class="modal-header"><h5 class="modal-title">Please confirm</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body" id="confirmText">Are you sure?</div>
+  <div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger" id="confirmYes">Yes, continue</button></div>
+</div></div></div>
+<div class="loader" id="loader"><div class="spinner-border text-primary"></div></div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

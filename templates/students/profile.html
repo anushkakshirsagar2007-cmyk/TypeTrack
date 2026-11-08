@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge, empty %}
+{% block title %}{{ s.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ s.name }}</h1><p>{{ s.student_code }} &middot; {{ badge('Active' if s.active else 'Inactive') }} {{ badge(s.payment_status) }}</p></div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary" href="{{ url_for('fees.add', student_id=s.id) }}"><i class="bi bi-cash"></i> Take payment</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('students.edit', id=s.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+    <form method="post" action="{{ url_for('students.toggle', id=s.id) }}" data-confirm="{{ 'Mark this student as inactive?' if s.active else 'Mark this student as active?' }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-secondary">{{ 'Make inactive' if s.active else 'Make active' }}</button></form>
+    {% if current_user.is_owner %}
+    <form method="post" action="{{ url_for('students.delete', id=s.id) }}" data-confirm="Delete {{ s.name }} permanently? All attendance and payment records of this student will also be deleted.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>{% endif %}
+  </div></div>
+<div class="row g-3 mb-3">
+ <div class="col-lg-5"><div class="card h-100"><div class="card-body"><h2 class="card-title">Personal details</h2>
+  <dl class="detail">
+   <dt>Phone</dt><dd>{{ s.phone }}</dd><dt>Email</dt><dd>{{ s.email or '-' }}</dd><dt>Date of birth</dt><dd>{{ s.dob|dmy }}</dd>
+   <dt>Address</dt><dd>{{ s.address or '-' }}</dd><dt>Admission date</dt><dd>{{ s.admission_date|dmy }}</dd></dl></div></div></div>
+ <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="card-title">Course and batch</h2>
+  <dl class="detail"><dt>Course</dt><dd>{{ s.course.name }}</dd>
+   <dt>Batch</dt><dd>{% if s.batch %}<a href="{{ url_for('batches.view', id=s.batch.id) }}">{{ s.batch.name }}</a>{% else %}Not assigned{% endif %}</dd>
+   <dt>Timing</dt><dd>{{ s.batch.timing if s.batch else '-' }}</dd><dt>Instructor</dt><dd>{{ (s.batch.instructor if s.batch else None) or '-' }}</dd></dl></div></div></div>
+ <div class="col-lg-3"><div class="card h-100"><div class="card-body"><h2 class="card-title">Fees</h2>
+  <dl class="detail"><dt>Total</dt><dd>{{ s.total_fees|inr }}</dd><dt>Discount</dt><dd>{{ s.discount|inr }}</dd><dt>Net fees</dt><dd>{{ s.net_fees|inr }}</dd>
+   <dt>Paid</dt><dd class="text-success">{{ s.paid|inr }}</dd><dt>Balance</dt><dd class="fw-bold {{ 'text-danger' if s.balance > 0 }}">{{ s.balance|inr }}</dd></dl></div></div></div>
+</div>
+<div class="row g-3">
+ <div class="col-lg-6"><div class="card h-100"><div class="card-body"><h2 class="card-title">Attendance</h2>
+  <div class="row text-center g-2 mb-3">
+   <div class="col-4"><div class="mini"><b>{{ '%.1f%%' % st.overall if st.overall is not none else '-' }}</b><small>Overall</small></div></div>
+   <div class="col-4"><div class="mini"><b>{{ '%.1f%%' % st.monthly if st.monthly is not none else '-' }}</b><small>This month</small></div></div>
+   <div class="col-4"><div class="mini"><b>{{ st.today or 'Not marked' }}</b><small>Today</small></div></div></div>
+  <p class="small text-muted">Present {{ st.present }} &middot; Absent {{ st.absent }} &middot; Leave {{ st.leave }} &middot; {{ st.total_days }} days marked</p>
+  {% if att %}<div class="table-scroll"><table class="table table-sm"><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>
+   {% for a in att %}<tr><td>{{ a.date|dmy }}</td><td>{{ badge(a.status) }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}{{ empty('bi-calendar-x', 'No attendance yet', 'Attendance will appear here once it is marked.') }}{% endif %}
+ </div></div></div>
+ <div class="col-lg-6"><div class="card h-100"><div class="card-body"><h2 class="card-title">Payment history</h2>
+  {% if s.payments %}<div class="table-scroll"><table class="table table-sm align-middle"><thead><tr><th>Date</th><th>Receipt</th><th>Mode</th><th class="text-end">Amount</th><th></th></tr></thead><tbody>
+   {% for p in s.payments %}<tr><td>{{ p.payment_date|dmy }}</td><td>{{ p.receipt_no }}<br><small class="text-muted">{{ p.reference or '' }}</small></td><td>{{ p.mode }}</td><td class="text-end">{{ p.amount|inr }}</td>
+    <td class="text-end text-nowrap"><a class="btn btn-sm btn-light" title="Receipt" href="{{ url_for('fees.receipt_page', id=p.id) }}"><i class="bi bi-receipt"></i></a>
+    {% if current_user.is_owner %}<form class="d-inline" method="post" action="{{ url_for('fees.delete', id=p.id) }}" data-confirm="Delete payment {{ p.receipt_no }}? The balance will increase."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}{{ empty('bi-cash-stack', 'No payments yet', 'Take the first payment for this student.', url_for('fees.add', student_id=s.id), 'Take payment') }}{% endif %}
+ </div></div></div>
+</div>
+{% endblock %}

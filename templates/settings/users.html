@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select, badge %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Users</h1><p>Owners have full access. Receptionists can manage inquiries, students, attendance and fees.</p></div></div>
+<div class="row g-3"><div class="col-lg-4"><form method="post" class="card" data-validate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ edit.id if edit else '' }}">
+ <div class="card-body"><h2 class="card-title">{{ 'Edit user' if edit else 'Add user' }}</h2><div class="row g-3">
+ {{ field('Full name', 'name', edit.name if edit else request.form.get('name',''), required=True, col='col-12') }}
+ {{ field('Username', 'username', edit.username if edit else request.form.get('username',''), required=True, col='col-12') }}
+ {{ field('Password' ~ (' (leave empty to keep)' if edit else ''), 'password', '', 'password', not edit, 'At least 8 characters', 'col-12', 'autocomplete="new-password"') }}
+ {{ select('Role', 'role', [('receptionist','Receptionist'),('owner','Owner / Admin')], edit.role if edit else request.form.get('role','receptionist'), True, 'col-12', blank=None) }}
+ {{ select('Status', 'active', [('1','Active'),('0','Inactive')], ('1' if (not edit or edit.active) else '0'), col='col-12', blank=None) }}</div></div>
+ <div class="card-footer d-flex gap-2"><button class="btn btn-primary flex-fill">Save user</button>{% if edit %}<a class="btn btn-light" href="{{ url_for('settings.users') }}">Cancel</a>{% endif %}</div></form></div>
+<div class="col-lg-8"><div class="card"><div class="card-body"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
+{% for u in users %}<tr><td>{{ u.name }}</td><td>{{ u.username }}</td><td>{{ 'Owner' if u.is_owner else 'Receptionist' }}</td><td>{{ badge('Active' if u.active else 'Inactive') }}</td><td class="text-end"><a class="btn btn-sm btn-light" href="{{ url_for('settings.users', edit=u.id) }}"><i class="bi bi-pencil"></i></a></td></tr>{% endfor %}</tbody></table></div></div></div></div></div>
+{% endblock %}

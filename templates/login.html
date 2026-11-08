@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block public %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="text-center mb-4">
+      {% if inst and inst.logo %}<img src="{{ url_for('uploaded_file', name=inst.logo) }}" class="login-logo" alt="">{% else %}<span class="brand-mark lg"><i class="bi bi-keyboard"></i></span>{% endif %}
+      <h1 class="h4 mt-3 mb-1">{{ inst.name if inst else 'TypeTrack' }}</h1>
+      <p class="text-muted mb-0">Log in to manage your institute</p>
+    </div>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3"><label class="form-label" for="username">Username</label>
+        <input class="form-control form-control-lg" id="username" name="username" required autofocus placeholder="Enter your username"></div>
+      <div class="mb-4"><label class="form-label" for="password">Password</label>
+        <input class="form-control form-control-lg" id="password" name="password" type="password" required placeholder="Enter your password"></div>
+      <button class="btn btn-primary btn-lg w-100">Log in</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select, badge %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Courses</h1><p>Course fees are filled automatically when you admit a student.</p></div></div>
+<div class="row g-3"><div class="col-lg-4"><form method="post" class="card" data-validate><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ edit.id if edit else '' }}">
+ <div class="card-body"><h2 class="card-title">{{ 'Edit course' if edit else 'Add course' }}</h2><div class="row g-3">
+ {{ field('Course name', 'name', edit.name if edit else request.form.get('name',''), required=True, placeholder='e.g. English Typing 40 WPM', col='col-12') }}
+ {{ field('Fees (Rs.)', 'fees', edit.fees if edit else request.form.get('fees',''), 'number', True, col='col-6', attrs='step="0.01" min="0"') }}
+ {{ field('Duration (months)', 'duration_months', edit.duration_months if edit else request.form.get('duration_months', 3), 'number', True, col='col-6', attrs='min="1"') }}
+ {{ select('Status', 'active', [('1','Active'),('0','Inactive')], ('1' if (not edit or edit.active) else '0'), col='col-12', blank=None) }}</div></div>
+ <div class="card-footer d-flex gap-2"><button class="btn btn-primary flex-fill">Save course</button>{% if edit %}<a class="btn btn-light" href="{{ url_for('settings.courses') }}">Cancel</a>{% endif %}</div></form></div>
+<div class="col-lg-8"><div class="card"><div class="card-body"><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Course</th><th>Duration</th><th class="text-end">Fees</th><th>Status</th><th></th></tr></thead><tbody>
+{% for c in courses %}<tr><td>{{ c.name }}</td><td>{{ c.duration_months }} months</td><td class="text-end">{{ c.fees|inr }}</td><td>{{ badge('Active' if c.active else 'Inactive') }}</td>
+<td class="text-end text-nowrap"><a class="btn btn-sm btn-light" href="{{ url_for('settings.courses', edit=c.id) }}"><i class="bi bi-pencil"></i></a>
+<form class="d-inline" method="post" action="{{ url_for('settings.course_delete', id=c.id) }}" data-confirm="Delete {{ c.name }}? If it is in use it will be deactivated instead."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button></form></td></tr>
+{% else %}<tr><td colspan="5" class="text-center text-muted py-4">No courses yet. Add your first course.</td></tr>{% endfor %}</tbody></table></div></div></div></div></div>
+{% endblock %}

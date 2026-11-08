@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import select, empty, pager %}
+{% block title %}Fees & Payments{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Fees &amp; payments</h1><p>Every payment received.</p></div>
+ <div class="d-flex gap-2"><a class="btn btn-outline-primary btn-lg" href="{{ url_for('fees.pending') }}"><i class="bi bi-hourglass-split"></i> Pending fees</a>
+ <a class="btn btn-primary btn-lg" href="{{ url_for('fees.add') }}"><i class="bi bi-plus-lg"></i> Take payment</a></div></div>
+<div class="card mb-3"><div class="card-body"><form class="row g-2" method="get" data-no-loader>
+ <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Student, ID, receipt or reference"></div>
+ {{ select('', 'mode', modes|zip(modes)|list, f.get('mode',''), col='col-6 col-lg-2', blank='All modes') }}
+ <div class="col-6 col-lg-2"><input type="date" class="form-control" name="start" value="{{ f.get('start','') }}" title="From date"></div>
+ <div class="col-6 col-lg-2"><input type="date" class="form-control" name="end" value="{{ f.get('end','') }}" title="To date"></div>
+ <div class="col-12 col-lg-3 d-flex gap-2"><button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button><a class="btn btn-light" href="{{ url_for('fees.index') }}">Reset</a></div></form></div></div>
+<div class="card"><div class="card-body">
+ <div class="mb-3">Total in this list: <b class="fs-5">{{ total|inr }}</b></div>
+ {% if p.items %}<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Date</th><th>Receipt</th><th>Student</th><th>Mode</th><th>Reference</th><th class="text-end">Amount</th><th></th></tr></thead><tbody>
+ {% for x in p.items %}<tr><td>{{ x.payment_date|dmy }}</td><td>{{ x.receipt_no }}</td><td><a href="{{ url_for('students.profile', id=x.student_id) }}">{{ x.student.name }}</a><br><small class="text-muted">{{ x.student.student_code }}</small></td>
+  <td>{{ x.mode }}</td><td>{{ x.reference or '-' }}</td><td class="text-end fw-semibold">{{ x.amount|inr }}</td>
+  <td class="text-end text-nowrap"><a class="btn btn-sm btn-light" href="{{ url_for('fees.receipt_page', id=x.id) }}" title="Receipt"><i class="bi bi-receipt"></i></a>
+  <a class="btn btn-sm btn-light" href="{{ url_for('fees.receipt_pdf', id=x.id, download=1) }}" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></a>
+  {% if current_user.is_owner %}<form class="d-inline" method="post" action="{{ url_for('fees.delete', id=x.id) }}" data-confirm="Delete payment {{ x.receipt_no }}? The student's balance will increase."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-light text-danger"><i class="bi bi-trash"></i></button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{{ pager(p) }}
+ {% else %}{{ empty('bi-cash-stack', 'No payments found', 'Payments you record will show up here.', url_for('fees.add'), 'Take payment') }}{% endif %}
+</div></div>
+{% endblock %}

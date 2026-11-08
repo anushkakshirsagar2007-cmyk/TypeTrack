@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_macros.html" import select, empty, pager, badge %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Students</h1><p>{{ p.total }} student{{ '' if p.total == 1 else 's' }} found</p></div>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('students.add') }}"><i class="bi bi-person-plus"></i> Add student</a></div>
+<div class="card mb-3"><div class="card-body">
+<form class="row g-2" method="get" data-no-loader>
+  <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name, ID or phone"></div>
+  {{ select('', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, f.get('course_id',''), col='col-6 col-lg-2', blank='All courses') }}
+  {{ select('', 'batch_id', batches|map(attribute='id')|zip(batches|map(attribute='name'))|list, f.get('batch_id',''), col='col-6 col-lg-2', blank='All batches') }}
+  {{ select('', 'pay', [('Paid','Paid'),('Partial','Partly paid'),('Unpaid','Not paid')], f.get('pay',''), col='col-6 col-lg-2', blank='Any payment') }}
+  {{ select('', 'status', [('active','Active'),('inactive','Inactive')], f.get('status',''), col='col-6 col-lg-1', blank='Status') }}
+  <div class="col-12 col-lg-2 d-flex gap-2"><button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button><a class="btn btn-light" href="{{ url_for('students.index') }}">Reset</a></div>
+</form></div></div>
+<div class="card"><div class="card-body">
+{% if p.items %}
+<div class="table-responsive"><table class="table table-hover align-middle">
+<thead><tr><th>ID</th><th>Student</th><th>Course / Batch</th><th class="text-end">Net fees</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
+{% for s in p.items %}<tr>
+<td class="text-nowrap">{{ s.student_code }}</td>
+<td><a class="fw-semibold" href="{{ url_for('students.profile', id=s.id) }}">{{ s.name }}</a><br><small class="text-muted">{{ s.phone }}</small></td>
+<td>{{ s.course.name }}<br><small class="text-muted">{{ s.batch.name if s.batch else 'No batch' }}</small></td>
+<td class="text-end">{{ s.net_fees|inr }}</td><td class="text-end">{{ s.paid|inr }}</td><td class="text-end fw-semibold">{{ s.balance|inr }}</td>
+<td>{{ badge(s.payment_status) }}</td><td>{{ badge('Active' if s.active else 'Inactive') }}</td>
+<td class="text-nowrap text-end">
+ <a class="btn btn-sm btn-light" title="View" href="{{ url_for('students.profile', id=s.id) }}"><i class="bi bi-eye"></i></a>
+ <a class="btn btn-sm btn-light" title="Edit" href="{{ url_for('students.edit', id=s.id) }}"><i class="bi bi-pencil"></i></a>
+ <a class="btn btn-sm btn-light" title="Take payment" href="{{ url_for('fees.add', student_id=s.id) }}"><i class="bi bi-cash"></i></a></td>
+</tr>{% endfor %}</tbody></table></div>
+{{ pager(p) }}
+{% else %}{{ empty('bi-people', 'No students found', 'Try changing the filters, or add your first student.', url_for('students.add'), 'Add student') }}{% endif %}
+</div></div>
+{% endblock %}

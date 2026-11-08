@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field %}
+{% block title %}Institute profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Institute profile</h1><p>Shown on receipts and reports.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="card" data-validate style="max-width:900px"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="card-body"><div class="row g-3">
+ {{ field('Institute name', 'name', i.name, required=True) }}{{ field('Owner name', 'owner_name', i.owner_name) }}
+ {{ field('Contact number(s)', 'phone', i.phone, 'tel', attrs='maxlength="100" placeholder="Separate multiple numbers with commas"') }}{{ field('Email', 'email', i.email, 'email') }}
+ {{ field('Website', 'website', i.website) }}{{ field('Receipt footer note', 'receipt_note', i.receipt_note) }}
+ <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2">{{ i.address or '' }}</textarea></div>
+ <div class="col-12"><label class="form-label">Logo (PNG, JPG or WEBP, max 2 MB)</label><div class="d-flex align-items-center gap-3">
+  {% if i.logo %}<img class="logo-preview" src="{{ url_for('uploaded_file', name=i.logo) }}" alt="Current logo">{% endif %}<input class="form-control" type="file" name="logo" accept=".png,.jpg,.jpeg,.webp"></div></div>
+</div></div><div class="card-footer text-end"><button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Save details</button></div></form>
+{% endblock %}

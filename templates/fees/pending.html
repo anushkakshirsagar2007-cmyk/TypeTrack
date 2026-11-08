@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}Pending fees{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Pending fees</h1><p>{{ rows|length }} students owe a total of <b>{{ total|inr }}</b></p></div>
+ <div class="btn-group"><a class="btn {{ 'btn-primary' if not overdue_only else 'btn-outline-primary' }}" href="{{ url_for('fees.pending') }}">All pending</a><a class="btn {{ 'btn-primary' if overdue_only else 'btn-outline-primary' }}" href="{{ url_for('fees.pending', overdue=1) }}">Overdue only</a></div></div>
+<div class="card"><div class="card-body">
+{% if rows %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Student</th><th>Course</th><th>Admitted</th><th class="text-end">Net fees</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th></th></tr></thead><tbody>
+{% for s, wa in rows %}<tr><td><a class="fw-semibold" href="{{ url_for('students.profile', id=s.id) }}">{{ s.name }}</a><br><small class="text-muted">{{ s.student_code }} &middot; {{ s.phone }}</small></td><td>{{ s.course.name }}</td><td>{{ s.admission_date|dmy }}</td>
+ <td class="text-end">{{ s.net_fees|inr }}</td><td class="text-end">{{ s.paid|inr }}</td><td class="text-end fw-bold text-danger">{{ s.balance|inr }}</td>
+ <td class="text-end text-nowrap"><a class="btn btn-sm btn-success" target="_blank" rel="noopener" href="{{ wa }}"><i class="bi bi-whatsapp"></i> Remind</a> <a class="btn btn-sm btn-primary" href="{{ url_for('fees.add', student_id=s.id) }}">Take payment</a></td></tr>{% endfor %}</tbody></table></div>
+{% else %}{{ empty('bi-emoji-smile', 'No pending fees', 'Every student has paid in full.') }}{% endif %}</div></div>
+{% endblock %}

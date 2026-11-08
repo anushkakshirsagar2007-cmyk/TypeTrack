@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select %}
+{% block title %}Take payment{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Take payment</h1><p>A receipt is created automatically.</p></div></div>
+<form method="post" class="card" data-validate style="max-width:820px"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="card-body"><div class="row g-3">
+ <div class="col-12"><label class="form-label" for="student_id">Student <span class="text-danger">*</span></label>
+  <select class="form-select form-select-lg" id="student_id" name="student_id" required><option value="">Select a student</option>
+  {% for s in students %}<option value="{{ s.id }}" data-balance="{{ s.balance }}" {{ 'selected' if selected == s.id }}>{{ s.name }} - {{ s.student_code }} (balance {{ s.balance|inr }})</option>{% endfor %}</select>
+  <div class="form-text" id="balHint"></div></div>
+ {{ field('Amount (Rs.)', 'amount', request.form.get('amount',''), 'number', True, 'Amount received', attrs='step="0.01" min="0.01"') }}
+ {{ field('Payment date', 'payment_date', request.form.get('payment_date', today), 'date', True, attrs='max="' ~ today ~ '"') }}
+ {{ select('Payment mode', 'mode', modes|zip(modes)|list, request.form.get('mode','Cash'), True, blank=None) }}
+ {{ field('Transaction reference', 'reference', request.form.get('reference',''), placeholder='Needed for UPI, Online, Bank Transfer') }}
+ {{ field('Note', 'note', request.form.get('note',''), col='col-12', placeholder='Optional, e.g. 2nd installment') }}
+</div></div>
+<div class="card-footer d-flex gap-2 justify-content-end"><button type="button" class="btn btn-light btn-lg" id="fullBal">Pay full balance</button><a class="btn btn-light btn-lg" href="{{ url_for('fees.index') }}">Cancel</a><button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Save payment</button></div></form>
+{% endblock %}

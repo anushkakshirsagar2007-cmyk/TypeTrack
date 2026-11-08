@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, select %}
+{% block title %}{{ 'Edit student' if s else 'Add student' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Edit student' if s else 'Add student' }}</h1>
+  <p>{% if s %}{{ s.student_code }}{% elif inquiry %}Details filled from inquiry of {{ inquiry.name }}{% else %}A student ID is created automatically.{% endif %}</p></div></div>
+<form method="post" class="card" data-validate>
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{% if inquiry %}<input type="hidden" name="inquiry_id" value="{{ inquiry.id }}">{% endif %}
+<div class="card-body"><div class="row g-3">
+  {{ field('Student name', 'name', (d.name if d else (s.name if s else '')), required=True, placeholder='Full name') }}
+  {{ field('Phone number', 'phone', (d.phone if d else (s.phone if s else '')), 'tel', True, '10-digit mobile number') }}
+  {{ field('Email', 'email', (d.email if d else (s.email if s else '')), 'email', placeholder='Optional') }}
+  {{ field('Date of birth', 'dob', (d.dob if d else (s.dob if s else '')), 'date', attrs='max="' ~ today ~ '"') }}
+  {{ field('Admission date', 'admission_date', (d.admission_date if d and d.admission_date else (s.admission_date if s else today)), 'date', True) }}
+  {{ select('Course', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, (d.course_id if d else (s.course_id if s else '')), True, attrs='id="course_id"') }}
+  <div class="col-md-6"><label class="form-label" for="batch_id">Batch</label>
+    <select class="form-select" id="batch_id" name="batch_id"><option value="">No batch yet</option>
+    {% set cur = d.batch_id if d else (s.batch_id if s else None) %}
+    {% for b in batches %}<option value="{{ b.id }}" data-course="{{ b.course_id }}" {% if cur == b.id %}selected{% endif %}>{{ b.label }} &middot; {{ b.filled }}/{{ b.capacity }}</option>{% endfor %}</select></div>
+  <div class="col-md-6"><label class="form-label" for="address">Address</label><textarea class="form-control" id="address" name="address" rows="2" placeholder="Home address">{{ d.address if d else (s.address or '' if s else '') }}</textarea></div>
+  <div class="col-12"><hr class="my-1"><h2 class="card-title mt-2">Fees</h2></div>
+  <div class="col-md-4"><label class="form-label" for="total_fees">Total course fees (Rs.) <span class="text-danger">*</span></label>
+    <input class="form-control" type="number" step="0.01" min="0" id="total_fees" name="total_fees" required value="{{ d.total_fees if d else (s.total_fees if s else '') }}">
+    <div class="form-text" id="courseFeeHint">Filled automatically from the selected course.</div></div>
+  {{ field('Discount (Rs.)', 'discount', (d.discount if d else (s.discount if s else 0)), 'number', col='col-md-4', attrs='step="0.01" min="0"') }}
+  <div class="col-md-4"><label class="form-label">Net fees</label><div class="form-control bg-light fw-bold" id="netFees">Rs. 0.00</div></div>
+  {% if not s %}
+  <div class="col-12"><h2 class="card-title mt-2">Payment at admission <small class="text-muted fw-normal">(optional)</small></h2></div>
+  {{ field('Amount paid now (Rs.)', 'initial_amount', request.form.get('initial_amount',''), 'number', col='col-md-4', placeholder='0', attrs='step="0.01" min="0"') }}
+  {{ select('Payment mode', 'payment_mode', modes|zip(modes)|list, request.form.get('payment_mode','Cash'), col='col-md-4', blank=None) }}
+  {{ field('Transaction reference', 'reference', request.form.get('reference',''), col='col-md-4', placeholder='UPI / bank reference, if any') }}
+  {% else %}
+  {{ select('Status', 'active', [('1','Active'),('0','Inactive')], ('1' if (d.active if d else s.active) else '0'), col='col-md-4', blank=None) }}
+  {% endif %}
+</div></div>
+<div class="card-footer d-flex gap-2 justify-content-end">
+  <a class="btn btn-light btn-lg" href="{{ url_for('students.profile', id=s.id) if s else url_for('students.index') }}">Cancel</a>
+  <button class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> {{ 'Save changes' if s else 'Save student' }}</button></div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+window.TT_COURSES = {{ courses|map(attribute='fees')|map('float')|list|tojson }};
+window.TT_COURSE_IDS = {{ courses|map(attribute='id')|list|tojson }};
+window.TT_EDIT = {{ 'true' if s else 'false' }};
+</script>
+{% endblock %}

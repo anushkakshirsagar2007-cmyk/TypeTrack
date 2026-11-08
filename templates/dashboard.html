@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import badge %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Dashboard</h1><p>{{ today.strftime('%A, %d %B %Y') }}</p></div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary" href="{{ url_for('inquiries.add') }}"><i class="bi bi-chat-dots"></i> New inquiry</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('attendance.mark') }}"><i class="bi bi-calendar-check"></i> Attendance</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('fees.add') }}"><i class="bi bi-cash"></i> Take payment</a>
+    <a class="btn btn-primary" href="{{ url_for('students.add') }}"><i class="bi bi-person-plus"></i> New student</a></div></div>
+
+<div class="row g-3 mb-3">
+  {% for icon, label, val, sub, url in [
+    ('bi-people','Total students', stats.total, 'All admissions', url_for('students.index')),
+    ('bi-person-check','Active students', stats.active, 'Currently studying', url_for('students.index', status='active')),
+    ('bi-calendar-check','Present today', stats.present_today, 'of ' ~ stats.marked_today ~ ' marked today', url_for('attendance.mark')),
+    ('bi-chat-dots','New inquiries', stats.new_inquiries, 'Not contacted yet', url_for('inquiries.index', status='New')),
+    ('bi-cash-stack','Fees collected', stats.collected|inr, 'All time', url_for('fees.index')),
+    ('bi-hourglass-split','Pending fees', stats.pending|inr, stats.pending_count ~ ' students owe fees', url_for('fees.pending'))] %}
+  <div class="col-6 col-xl-2"><a href="{{ url }}" class="stat-card"><i class="bi {{ icon }}"></i><div class="stat-val">{{ val }}</div><div class="stat-label">{{ label }}</div><small>{{ sub }}</small></a></div>
+  {% endfor %}
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="card-title">Monthly admissions</h2><div class="chart-box"><canvas id="admChart"></canvas></div></div></div></div>
+  <div class="col-lg-6"><div class="card"><div class="card-body"><h2 class="card-title">Monthly fee collection</h2><div class="chart-box"><canvas id="feeChart"></canvas></div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+    <div class="d-flex justify-content-between"><h2 class="card-title">Follow-ups due</h2><a href="{{ url_for('inquiries.index', due=1) }}" class="small">See all</a></div>
+    {% for i in due %}<a class="list-row" href="{{ url_for('inquiries.view', id=i.id) }}"><div><b>{{ i.name }}</b><small>{{ i.phone }} &middot; {{ i.course.name if i.course else 'No course' }}</small></div><span class="text-danger small">{{ i.follow_up_date|dmy }}</span></a>
+    {% else %}<p class="text-muted small mb-0">No follow-ups are due. Nice work.</p>{% endfor %}
+    {% if upcoming %}<h3 class="sub-title">Coming up this week</h3>
+    {% for i in upcoming %}<a class="list-row" href="{{ url_for('inquiries.view', id=i.id) }}"><div><b>{{ i.name }}</b><small>{{ i.phone }}</small></div><span class="small">{{ i.follow_up_date|dmy }}</span></a>{% endfor %}{% endif %}
+  </div></div></div>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+    <div class="d-flex justify-content-between"><h2 class="card-title">Pending fees</h2><a href="{{ url_for('fees.pending') }}" class="small">See all</a></div>
+    {% for s in pending %}<a class="list-row" href="{{ url_for('students.profile', id=s.id) }}"><div><b>{{ s.name }}</b><small>{{ s.student_code }} &middot; {{ s.course.name }}</small></div><span class="fw-bold text-danger">{{ s.balance|inr }}</span></a>
+    {% else %}<p class="text-muted small mb-0">All fees are collected.</p>{% endfor %}
+  </div></div></div>
+  <div class="col-12"><div class="card"><div class="card-body">
+    <div class="d-flex justify-content-between"><h2 class="card-title">Recent admissions</h2><a href="{{ url_for('students.index') }}" class="small">All students</a></div>
+    <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>ID</th><th>Name</th><th>Course</th><th>Admitted</th><th>Status</th></tr></thead><tbody>
+    {% for s in recent %}<tr><td>{{ s.student_code }}</td><td><a href="{{ url_for('students.profile', id=s.id) }}">{{ s.name }}</a></td><td>{{ s.course.name }}</td><td>{{ s.admission_date|dmy }}</td><td>{{ badge('Active' if s.active else 'Inactive') }}</td></tr>
+    {% else %}<tr><td colspan="5" class="text-center text-muted py-4">No admissions yet.</td></tr>{% endfor %}</tbody></table></div>
+  </div></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script>
+const labels = {{ labels|tojson }};
+const css = getComputedStyle(document.documentElement);
+new Chart(document.getElementById('admChart'), {type:'bar', data:{labels, datasets:[{label:'Admissions', data:{{ adm|tojson }}, backgroundColor:css.getPropertyValue('--tt-blue').trim(), borderRadius:6}]}, options:{maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}}}});
+new Chart(document.getElementById('feeChart'), {type:'line', data:{labels, datasets:[{label:'Collected (Rs.)', data:{{ fee|tojson }}, borderColor:css.getPropertyValue('--tt-navy').trim(), backgroundColor:'rgba(44,116,179,.15)', fill:true, tension:.35}]}, options:{maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+</script>
+{% endblock %}

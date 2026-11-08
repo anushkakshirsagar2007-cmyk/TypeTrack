@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Notification center</h1><p>Reminders that need your attention.</p></div></div>
+<div class="row g-3">
+ <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="card-title">Follow-ups due ({{ due|length }})</h2>
+  {% for i in due %}<a class="list-row" href="{{ url_for('inquiries.view', id=i.id) }}"><div><b>{{ i.name }}</b><small>{{ i.phone }}</small></div><span class="text-danger small">{{ i.follow_up_date|dmy }}</span></a>{% else %}<p class="text-muted small">Nothing due.</p>{% endfor %}</div></div></div>
+ <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="card-title">Overdue fees ({{ overdue|length }})</h2>
+  {% for s in overdue %}<a class="list-row" href="{{ url_for('students.profile', id=s.id) }}"><div><b>{{ s.name }}</b><small>{{ s.student_code }}</small></div><span class="text-danger small fw-bold">{{ s.balance|inr }}</span></a>{% else %}<p class="text-muted small">No overdue fees.</p>{% endfor %}
+  {% if overdue %}<a class="btn btn-sm btn-outline-primary mt-3" href="{{ url_for('fees.pending', overdue=1) }}">Send reminders</a>{% endif %}</div></div></div>
+ <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="card-title">Upcoming follow-ups ({{ upcoming|length }})</h2>
+  {% for i in upcoming %}<a class="list-row" href="{{ url_for('inquiries.view', id=i.id) }}"><div><b>{{ i.name }}</b><small>{{ i.phone }}</small></div><span class="small">{{ i.follow_up_date|dmy }}</span></a>{% else %}<p class="text-muted small">Nothing in the next 7 days.</p>{% endfor %}</div></div></div>
+</div>
+{% endblock %}
