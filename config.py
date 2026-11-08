@@ -1,9 +1,9 @@
 import os
 import sys
 from datetime import timedelta
-from urllib.parse import quote_plus
+from urllib.parse import parse_qsl, quote_plus, unquote
 from dotenv import load_dotenv
-from sqlalchemy.engine import make_url
+from sqlalchemy.engine import URL
 
 
 def _runtime_dir():
@@ -19,18 +19,74 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 IS_VERCEL = os.getenv("VERCEL") == "1"
 
 
+def _postgres_url(database_url):
+    """Return a psycopg URL.
+
+    SQLAlchemy stops the password at the first '@'. Supabase passwords often
+    contain '@', which was glued onto the hostname. Split on the last '@' and
+    re-encode the password so the host stays intact.
+    """
+    if database_url.startswith("postgres://"):
+        database_url = "postgresql://" + database_url[len("postgres://"):]
+    if database_url.startswith("postgresql+psycopg://"):
+        remainder = database_url[len("postgresql+psycopg://"):]
+    elif database_url.startswith("postgresql://"):
+        remainder = database_url[len("postgresql://"):]
+    else:
+        return database_url
+
+    query = ""
+    if "?" in remainder:
+        remainder, query = remainder.split("?", 1)
+    if "@" not in remainder:
+        raise RuntimeError("DATABASE_URL is missing a host.")
+    userinfo, hostpart = remainder.rsplit("@", 1)
+    if ":" in userinfo:
+        username, password = userinfo.split(":", 1)
+        password = unquote(password)
+    else:
+        username, password = userinfo, None
+    username = unquote(username) or None
+
+    database = None
+    if "/" in hostpart:
+        hostport, database = hostpart.split("/", 1)
+        database = unquote(database) or None
+    else:
+        hostport = hostpart
+
+    port = None
+    if hostport.startswith("[") and "]" in hostport:
+        host, tail = hostport[1:].split("]", 1)
+        if tail.startswith(":"):
+            port = int(tail[1:])
+    elif hostport.count(":") == 1:
+        host, port_text = hostport.split(":")
+        port = int(port_text)
+    else:
+        host = hostport
+
+    params = dict(parse_qsl(query, keep_blank_values=True))
+    if os.getenv("VERCEL") == "1" or (host and "supabase.co" in host):
+        params["sslmode"] = "require"
+    return URL.create(
+        "postgresql+psycopg",
+        username=username,
+        password=password,
+        host=host,
+        port=port,
+        database=database,
+        query=params,
+    ).render_as_string(hide_password=False)
+
+
 def _db_uri():
     # DATABASE_URL supports managed MySQL/PostgreSQL providers and test SQLite.
     # SQLAlchemy needs an explicit driver for PostgreSQL.
     database_url = os.getenv("DATABASE_URL")
     if database_url:
-        if database_url.startswith("postgres://"):
-            database_url = "postgresql+psycopg://" + database_url[len("postgres://"):]
-        elif database_url.startswith("postgresql://"):
-            database_url = "postgresql+psycopg://" + database_url[len("postgresql://"):]
-        if os.getenv("VERCEL") == "1" and database_url.startswith("postgresql+psycopg://"):
-            url = make_url(database_url)
-            return url.set(query={**url.query, "sslmode": "require"}).render_as_string(hide_password=False)
+        if database_url.startswith(("postgres://", "postgresql://", "postgresql+psycopg://")):
+            return _postgres_url(database_url)
         return database_url
     # With no database settings, the institute PC uses a file in data/.
     if os.getenv("DB_PASSWORD"):
