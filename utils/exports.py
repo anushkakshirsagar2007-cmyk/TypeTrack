@@ -100,7 +100,7 @@ def make_receipt_pdf(payment, inst):
 
     story = [head, Spacer(1, 8), banner, Spacer(1, 10),
              kv([("Receipt No.", payment.receipt_no), ("Payment Date", f"{payment.payment_date:%d %b %Y}")]), Spacer(1, 8),
-             kv([("Student Name", s.name), ("Student ID", s.student_code),
+             kv([("Student Name", s.name), ("Student ID", s.student_code + (f" (GR: {s.gr_no})" if s.gr_no else "")),
                  ("Contact No.", f"{s.phone} / {s.alt_phone}" if s.alt_phone else s.phone),
                  ("Course", s.course.name), ("Batch", s.batch.label if s.batch else "-")]), Spacer(1, 8),
              kv([("Amount Paid", f"Rs. {payment.amount:,.2f}"), ("Payment Mode", payment.mode),

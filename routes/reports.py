@@ -36,7 +36,7 @@ def build(kind, a):
             qs = qs.filter(Student.admission_date <= end)
         rows = [[s.student_code, s.name, s.phone, s.course.name, s.batch.name if s.batch else "-", f"{s.admission_date:%d-%m-%Y}",
                  m(s.net_fees), m(s.paid), m(s.balance), s.payment_status, "Active" if s.active else "Inactive"]
-                for s in qs.order_by(Student.name) if _match(q, s.name, s.phone, s.student_code, s.alt_phone, s.aadhar_no)]
+                for s in qs.order_by(Student.name) if _match(q, s.name, s.phone, s.student_code, s.gr_no, s.alt_phone, s.aadhar_no)]
         return ["ID", "Name", "Phone", "Course", "Batch", "Admission", "Net Fees", "Paid", "Balance", "Payment", "Status"], rows
     if kind == "batches":
         rows = [[b.name, b.course.name, b.instructor or "-", b.timing, f"{b.start_date:%d-%m-%Y}", b.capacity, b.filled,

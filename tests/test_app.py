@@ -56,20 +56,21 @@ with app.app_context():
 # student CRUD + validation
 r = owner.post("/students/add", data={"name": "", "phone": "12", "aadhar_no": "123"}, follow_redirects=True)
 check(b"Student name is required" in r.data and b"valid phone" in r.data and b"valid 12-digit Aadhaar" in r.data, "student validation errors")
-r = owner.post("/students/add", data={"name": "Test Stu", "phone": "9000000001", "alt_phone": "9000000002", "aadhar_no": "123456789012",
+r = owner.post("/students/add", data={"name": "Test Stu", "gr_no": "GR-501", "phone": "9000000001", "alt_phone": "9000000002", "aadhar_no": "123456789012",
         "address": "Camp Area, Pune", "dob": "2002-05-10", "admission_date": date.today().isoformat(), "course_id": cid,
         "batch_id": bid, "total_fees": "3000", "discount": "500", "initial_amount": "1000", "payment_mode": "Cash"}, follow_redirects=True)
 check(b"added with ID" in r.data, "student created with initial payment")
 with app.app_context():
     s = Student.query.filter_by(name="Test Stu").first(); sid = s.id
     check(float(s.net_fees) == 2500 and float(s.balance) == 1500 and s.payment_status == "Partial", "fee calculations")
-    check(s.alt_phone == "9000000002" and s.aadhar_no == "1234 5678 9012" and s.address == "Camp Area, Pune", "student new fields stored")
+    check(s.gr_no == "GR-501" and s.alt_phone == "9000000002" and s.aadhar_no == "1234 5678 9012" and s.address == "Camp Area, Pune", "student new fields stored")
     pid = s.payments[0].id
-check(owner.post(f"/students/{sid}/edit", data={"name": "Test Stu 2", "phone": "9000000001", "alt_phone": "9000000003", "aadhar_no": "123456789012",
+check(owner.post(f"/students/{sid}/edit", data={"name": "Test Stu 2", "gr_no": "GR-502", "phone": "9000000001", "alt_phone": "9000000003", "aadhar_no": "123456789012",
       "address": "Camp Area, Pune", "dob": "2002-05-10", "admission_date": date.today().isoformat(),
       "course_id": cid, "batch_id": bid, "total_fees": "3000", "discount": "500", "active": "1"}).status_code == 302, "student edit")
 check(b"Test Stu 2" in owner.get("/students/?q=9000000001").data, "student search by phone")
 check(b"Test Stu 2" in owner.get("/students/?q=1234").data, "student search by aadhar")
+check(b"Test Stu 2" in owner.get("/students/?q=GR-502").data, "student search by gr_no")
 check(b"Test Stu 2" in owner.get("/students/?pay=Partial").data, "payment status filter")
 
 # payments

@@ -24,8 +24,8 @@ def index():
     q = Student.query.options(selectinload(Student.payments), joinedload(Student.course), joinedload(Student.batch))
     if a.get("q", "").strip():
         like = f"%{a['q'].strip()}%"
-        q = q.filter(or_(Student.name.ilike(like), Student.student_code.ilike(like), Student.phone.like(like),
-                         Student.alt_phone.like(like), Student.aadhar_no.like(like)))
+        q = q.filter(or_(Student.name.ilike(like), Student.student_code.ilike(like), Student.gr_no.ilike(like),
+                         Student.phone.like(like), Student.alt_phone.like(like), Student.aadhar_no.like(like)))
     if a.get("course_id", type=int):
         q = q.filter(Student.course_id == a.get("course_id", type=int))
     if a.get("batch_id", type=int):
@@ -48,7 +48,8 @@ def index():
 def _collect(student=None):
     f = request.form
     raw_aadhar = f.get("aadhar_no", "").strip()
-    d = {"name": f.get("name", "").strip(), "phone": f.get("phone", "").strip(),
+    d = {"name": f.get("name", "").strip(), "gr_no": f.get("gr_no", "").strip() or None,
+         "phone": f.get("phone", "").strip(),
          "alt_phone": f.get("alt_phone", "").strip() or None,
          "email": f.get("email", "").strip() or None,
          "address": f.get("address", "").strip() or None, "dob": parse_date(f.get("dob")),

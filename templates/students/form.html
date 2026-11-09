@@ -9,18 +9,19 @@
 {% if inquiry %}<input type="hidden" name="inquiry_id" value="{{ inquiry.id }}">{% endif %}
 <div class="card-body"><div class="row g-3">
   {{ field('Student name', 'name', (d.name if d else (s.name if s else '')), required=True, placeholder='Full name') }}
+  {{ field('General registration no. (G.R. No.)', 'gr_no', (d.gr_no if d else (s.gr_no if s else '')), placeholder='e.g. GR-101 / Optional') }}
   {{ field('Contact no.', 'phone', (d.phone if d else (s.phone if s else '')), 'tel', True, '10-digit mobile number') }}
   {{ field('Alternate contact no.', 'alt_phone', (d.alt_phone if d else (s.alt_phone if s else '')), 'tel', placeholder='Optional second contact number') }}
-  {{ field('Email', 'email', (d.email if d else (s.email if s else '')), 'email', placeholder='Optional') }}
   {{ field('Date of birth', 'dob', (d.dob if d else (s.dob if s else '')), 'date', attrs='max="' ~ today ~ '"') }}
   {{ field('Aadhaar card no.', 'aadhar_no', (d.aadhar_no if d else (s.aadhar_no if s else '')), placeholder='12-digit Aadhaar number') }}
+  {{ field('Email', 'email', (d.email if d else (s.email if s else '')), 'email', placeholder='Optional') }}
   {{ field('Admission date', 'admission_date', (d.admission_date if d and d.admission_date else (s.admission_date if s else today)), 'date', True) }}
   {{ select('Course', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, (d.course_id if d else (s.course_id if s else '')), True, attrs='id="course_id"') }}
   <div class="col-md-6"><label class="form-label" for="batch_id">Batch</label>
     <select class="form-select" id="batch_id" name="batch_id"><option value="">No batch yet</option>
     {% set cur = d.batch_id if d else (s.batch_id if s else None) %}
     {% for b in batches %}<option value="{{ b.id }}" data-course="{{ b.course_id }}" {% if cur == b.id %}selected{% endif %}>{{ b.label }} &middot; {{ b.filled }}/{{ b.capacity }}</option>{% endfor %}</select></div>
-  <div class="col-md-6"><label class="form-label" for="address">Address</label><textarea class="form-control" id="address" name="address" rows="2" placeholder="Home address">{{ d.address if d else (s.address or '' if s else '') }}</textarea></div>
+  <div class="col-12"><label class="form-label" for="address">Address</label><textarea class="form-control" id="address" name="address" rows="2" placeholder="Home address">{{ d.address if d else (s.address or '' if s else '') }}</textarea></div>
   <div class="col-12"><hr class="my-1"><h2 class="card-title mt-2">Fees</h2></div>
   <div class="col-md-4"><label class="form-label" for="total_fees">Total course fees (Rs.) <span class="text-danger">*</span></label>
     <input class="form-control" type="number" step="0.01" min="0" id="total_fees" name="total_fees" required value="{{ d.total_fees if d else (s.total_fees if s else '') }}">

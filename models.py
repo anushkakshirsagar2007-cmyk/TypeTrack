@@ -88,6 +88,7 @@ class Student(db.Model):
     __tablename__ = "students"
     id = db.Column(db.Integer, primary_key=True)
     student_code = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    gr_no = db.Column(db.String(30), index=True)
     name = db.Column(db.String(120), nullable=False, index=True)
     phone = db.Column(db.String(20), nullable=False, index=True)
     alt_phone = db.Column(db.String(20))

@@ -38,7 +38,7 @@ def seed():
     for idx, name in enumerate(NAMES):
         b = batches[idx % 2]
         c = next(x for x in courses if x.id == b.course_id)
-        s = Student(student_code=next_student_code(), name=name, phone=f"98{random.randint(10000000, 99999999)}",
+        s = Student(student_code=next_student_code(), gr_no=f"GR-{1001 + idx}", name=name, phone=f"98{random.randint(10000000, 99999999)}",
                     alt_phone=f"91{random.randint(10000000, 99999999)}",
                     dob=today - timedelta(days=random.randint(6500, 9000)),
                     aadhar_no=f"5{random.randint(100, 999)} {random.randint(1000, 9999)} {random.randint(1000, 9999)}",

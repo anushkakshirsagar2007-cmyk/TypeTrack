@@ -12,6 +12,7 @@ def _find(q, limit):
     studs = Student.query.filter(or_(
         Student.name.ilike(like),
         Student.student_code.ilike(like),
+        Student.gr_no.ilike(like),
         Student.phone.like(like),
         Student.alt_phone.like(like),
         Student.aadhar_no.like(like),

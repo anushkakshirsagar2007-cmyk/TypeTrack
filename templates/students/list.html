@@ -6,7 +6,7 @@
   <a class="btn btn-primary btn-lg" href="{{ url_for('students.add') }}"><i class="bi bi-person-plus"></i> Add student</a></div>
 <div class="card mb-3"><div class="card-body">
 <form class="row g-2" method="get" data-no-loader>
-  <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name, ID, phone or Aadhaar"></div>
+  <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name, ID, GR No., phone or Aadhaar"></div>
   {{ select('', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, f.get('course_id',''), col='col-6 col-lg-2', blank='All courses') }}
   {{ select('', 'batch_id', batches|map(attribute='id')|zip(batches|map(attribute='name'))|list, f.get('batch_id',''), col='col-6 col-lg-2', blank='All batches') }}
   {{ select('', 'pay', [('Paid','Paid'),('Partial','Partly paid'),('Unpaid','Not paid')], f.get('pay',''), col='col-6 col-lg-2', blank='Any payment') }}
@@ -18,7 +18,7 @@
 <div class="table-responsive"><table class="table table-hover align-middle">
 <thead><tr><th>ID</th><th>Student</th><th>Course / Batch</th><th class="text-end">Net fees</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
 {% for s in p.items %}<tr>
-<td class="text-nowrap">{{ s.student_code }}</td>
+<td class="text-nowrap">{{ s.student_code }}{% if s.gr_no %}<br><small class="text-muted">GR: {{ s.gr_no }}</small>{% endif %}</td>
 <td><a class="fw-semibold" href="{{ url_for('students.profile', id=s.id) }}">{{ s.name }}</a><br><small class="text-muted">{{ s.phone }}{% if s.alt_phone %} &middot; {{ s.alt_phone }}{% endif %}</small></td>
 <td>{{ s.course.name }}<br><small class="text-muted">{{ s.batch.name if s.batch else 'No batch' }}</small></td>
 <td class="text-end">{{ s.net_fees|inr }}</td><td class="text-end">{{ s.paid|inr }}</td><td class="text-end fw-semibold">{{ s.balance|inr }}</td>

@@ -208,6 +208,7 @@ def ensure_database(app):
             dialect = engine.dialect.name
             if dialect == "postgresql":
                 with engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS gr_no VARCHAR(30);"))
                     conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS alt_phone VARCHAR(20);"))
                     conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS aadhar_no VARCHAR(20);"))
                     conn.execute(text("ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS alt_phone VARCHAR(20);"))
@@ -222,6 +223,8 @@ def ensure_database(app):
                 with engine.connect() as conn:
                     if "students" in table_names:
                         cols = {c["name"] for c in inspector.get_columns("students")}
+                        if "gr_no" not in cols:
+                            conn.execute(text("ALTER TABLE students ADD COLUMN gr_no VARCHAR(30)"))
                         if "alt_phone" not in cols:
                             conn.execute(text("ALTER TABLE students ADD COLUMN alt_phone VARCHAR(20)"))
                         if "aadhar_no" not in cols:
