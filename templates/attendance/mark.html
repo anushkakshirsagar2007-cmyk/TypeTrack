@@ -19,7 +19,7 @@
  {% if students %}
  <div class="table-responsive"><table class="table align-middle att-table"><thead><tr><th>Student</th><th class="text-center">Overall %</th><th class="text-center">Attendance</th></tr></thead><tbody>
  {% for s in students %}{% set cur = existing[s.id].status if s.id in existing else '' %}
-  <tr><td><a href="{{ url_for('students.profile', id=s.id) }}" class="fw-semibold">{{ s.name }}</a><br><small class="text-muted">{{ s.student_code }}</small></td>
+  <tr><td><a href="{{ url_for('students.profile', id=s.id) }}" class="fw-semibold">{{ s.name }}</a><br><small class="text-muted">{{ s.student_code }}{% if s.gr_no %} &middot; GR: {{ s.gr_no }}{% endif %}</small></td>
    <td class="text-center">{{ '%.0f%%' % stats[s.id].overall if stats[s.id].overall is not none else '-' }}</td>
    <td class="text-center"><div class="btn-group att-group" role="group">
     {% for st, cls in [('Present','success'),('Absent','danger'),('Leave','warning')] %}
