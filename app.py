@@ -186,9 +186,33 @@ def create_app(overrides=None):
 def ensure_database(app):
     """Create tables and the first owner if this PC has no data yet. Returns the new username, or None."""
     from models import Institute, User
+    from sqlalchemy import inspect, text
 
     with app.app_context():
         db.create_all()
+        try:
+            inspector = inspect(db.engine)
+            table_names = inspector.get_table_names()
+            if "students" in table_names:
+                cols = {c["name"] for c in inspector.get_columns("students")}
+                if "alt_phone" not in cols:
+                    db.session.execute(text("ALTER TABLE students ADD COLUMN alt_phone VARCHAR(20)"))
+                if "aadhar_no" not in cols:
+                    db.session.execute(text("ALTER TABLE students ADD COLUMN aadhar_no VARCHAR(20)"))
+            if "inquiries" in table_names:
+                cols = {c["name"] for c in inspector.get_columns("inquiries")}
+                if "alt_phone" not in cols:
+                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN alt_phone VARCHAR(20)"))
+                if "dob" not in cols:
+                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN dob DATE"))
+                if "aadhar_no" not in cols:
+                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN aadhar_no VARCHAR(20)"))
+                if "address" not in cols:
+                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN address TEXT"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
         if not Institute.query.first():
             institute = Institute(
                 name=app.config["INSTITUTE_NAME"],

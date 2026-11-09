@@ -9,9 +9,19 @@ bp.before_request(login_guard)
 
 def _find(q, limit):
     like = f"%{q}%"
-    studs = Student.query.filter(or_(Student.name.ilike(like), Student.student_code.ilike(like), Student.phone.like(like))) \
-        .order_by(Student.name).limit(limit).all()
-    inqs = Inquiry.query.filter(or_(Inquiry.name.ilike(like), Inquiry.phone.like(like))).order_by(Inquiry.id.desc()).limit(limit).all()
+    studs = Student.query.filter(or_(
+        Student.name.ilike(like),
+        Student.student_code.ilike(like),
+        Student.phone.like(like),
+        Student.alt_phone.like(like),
+        Student.aadhar_no.like(like),
+    )).order_by(Student.name).limit(limit).all()
+    inqs = Inquiry.query.filter(or_(
+        Inquiry.name.ilike(like),
+        Inquiry.phone.like(like),
+        Inquiry.alt_phone.like(like),
+        Inquiry.aadhar_no.like(like),
+    )).order_by(Inquiry.id.desc()).limit(limit).all()
     return studs, inqs
 
 

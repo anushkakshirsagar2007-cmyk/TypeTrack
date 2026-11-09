@@ -2,7 +2,7 @@
 {% from "_macros.html" import badge, field, select %}
 {% block title %}{{ i.name }}{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1>{{ i.name }}</h1><p>{{ i.phone }} &middot; {{ badge(i.status) }}</p></div>
+<div class="page-head"><div><h1>{{ i.name }}</h1><p>{{ i.phone }}{% if i.alt_phone %} &middot; {{ i.alt_phone }}{% endif %} &middot; {{ badge(i.status) }}</p></div>
  <div class="d-flex gap-2 flex-wrap">
   {% if i.converted_student_id %}<a class="btn btn-success" href="{{ url_for('students.profile', id=i.converted_student_id) }}"><i class="bi bi-person-check"></i> View student</a>
   {% else %}<a class="btn btn-success btn-lg" href="{{ url_for('students.add', inquiry_id=i.id) }}"><i class="bi bi-person-plus"></i> Convert to student</a>{% endif %}
@@ -12,9 +12,18 @@
  </div></div>
 <div class="row g-3">
  <div class="col-lg-5"><div class="card mb-3"><div class="card-body"><h2 class="card-title">Details</h2><dl class="detail">
-  <dt>Email</dt><dd>{{ i.email or '-' }}</dd><dt>Course</dt><dd>{{ i.course.name if i.course else '-' }}</dd><dt>Timing</dt><dd>{{ i.preferred_timing or '-' }}</dd>
-  <dt>Source</dt><dd>{{ i.source or '-' }}</dd><dt>Inquiry date</dt><dd>{{ i.inquiry_date|dmy }}</dd>
-  <dt>Next follow-up</dt><dd class="{{ 'text-danger fw-semibold' if i.is_open and i.follow_up_date and i.follow_up_date <= today }}">{{ i.follow_up_date|dmy }}</dd><dt>Remarks</dt><dd>{{ i.remarks or '-' }}</dd></dl></div></div>
+  <dt>Contact no.</dt><dd>{{ i.phone }}</dd>
+  <dt>Alternate contact</dt><dd>{{ i.alt_phone or '-' }}</dd>
+  <dt>Email</dt><dd>{{ i.email or '-' }}</dd>
+  <dt>Date of birth</dt><dd>{{ i.dob|dmy }}</dd>
+  <dt>Aadhaar no.</dt><dd>{{ i.aadhar_no or '-' }}</dd>
+  <dt>Address</dt><dd>{{ i.address or '-' }}</dd>
+  <dt>Course</dt><dd>{{ i.course.name if i.course else '-' }}</dd>
+  <dt>Timing</dt><dd>{{ i.preferred_timing or '-' }}</dd>
+  <dt>Source</dt><dd>{{ i.source or '-' }}</dd>
+  <dt>Inquiry date</dt><dd>{{ i.inquiry_date|dmy }}</dd>
+  <dt>Next follow-up</dt><dd class="{{ 'text-danger fw-semibold' if i.is_open and i.follow_up_date and i.follow_up_date <= today }}">{{ i.follow_up_date|dmy }}</dd>
+  <dt>Remarks</dt><dd>{{ i.remarks or '-' }}</dd></dl></div></div>
   {% if i.is_open %}
   <div class="card"><div class="card-body"><h2 class="card-title">Add follow-up</h2>
   <form method="post" action="{{ url_for('inquiries.followup', id=i.id) }}" class="row g-3"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

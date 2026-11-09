@@ -54,18 +54,22 @@ with app.app_context():
     course = Course.query.first(); batch = Batch.query.first()
     cid, bid = course.id, batch.id
 # student CRUD + validation
-r = owner.post("/students/add", data={"name": "", "phone": "12"}, follow_redirects=True)
-check(b"Student name is required" in r.data and b"valid phone" in r.data, "student validation errors")
-r = owner.post("/students/add", data={"name": "Test Stu", "phone": "9000000001", "admission_date": date.today().isoformat(), "course_id": cid,
+r = owner.post("/students/add", data={"name": "", "phone": "12", "aadhar_no": "123"}, follow_redirects=True)
+check(b"Student name is required" in r.data and b"valid phone" in r.data and b"valid 12-digit Aadhaar" in r.data, "student validation errors")
+r = owner.post("/students/add", data={"name": "Test Stu", "phone": "9000000001", "alt_phone": "9000000002", "aadhar_no": "123456789012",
+        "address": "Camp Area, Pune", "dob": "2002-05-10", "admission_date": date.today().isoformat(), "course_id": cid,
         "batch_id": bid, "total_fees": "3000", "discount": "500", "initial_amount": "1000", "payment_mode": "Cash"}, follow_redirects=True)
 check(b"added with ID" in r.data, "student created with initial payment")
 with app.app_context():
     s = Student.query.filter_by(name="Test Stu").first(); sid = s.id
     check(float(s.net_fees) == 2500 and float(s.balance) == 1500 and s.payment_status == "Partial", "fee calculations")
+    check(s.alt_phone == "9000000002" and s.aadhar_no == "1234 5678 9012" and s.address == "Camp Area, Pune", "student new fields stored")
     pid = s.payments[0].id
-check(owner.post(f"/students/{sid}/edit", data={"name": "Test Stu 2", "phone": "9000000001", "admission_date": date.today().isoformat(),
+check(owner.post(f"/students/{sid}/edit", data={"name": "Test Stu 2", "phone": "9000000001", "alt_phone": "9000000003", "aadhar_no": "123456789012",
+      "address": "Camp Area, Pune", "dob": "2002-05-10", "admission_date": date.today().isoformat(),
       "course_id": cid, "batch_id": bid, "total_fees": "3000", "discount": "500", "active": "1"}).status_code == 302, "student edit")
 check(b"Test Stu 2" in owner.get("/students/?q=9000000001").data, "student search by phone")
+check(b"Test Stu 2" in owner.get("/students/?q=1234").data, "student search by aadhar")
 check(b"Test Stu 2" in owner.get("/students/?pay=Partial").data, "payment status filter")
 
 # payments
@@ -100,18 +104,24 @@ data["date"] = (date.today() + timedelta(days=2)).isoformat()
 check(b"future date" in rec.post("/attendance/", data=data, follow_redirects=True).data, "future attendance blocked")
 
 # inquiry -> student conversion
-r = rec.post("/inquiries/add", data={"name": "Lead One", "phone": "9111111111", "inquiry_date": today, "status": "New", "course_id": cid,
+r = rec.post("/inquiries/add", data={"name": "Lead One", "phone": "9111111111", "alt_phone": "9111111112", "dob": "2001-08-15",
+      "aadhar_no": "987654321098", "address": "Market Yard, Pune", "inquiry_date": today, "status": "New", "course_id": cid,
       "follow_up_date": today}, follow_redirects=True)
 with app.app_context():
     iq = Inquiry.query.filter_by(name="Lead One").first(); iid = iq.id
+    check(iq.alt_phone == "9111111112" and iq.aadhar_no == "9876 5432 1098" and iq.address == "Market Yard, Pune", "inquiry new fields stored")
 check(b"Lead One" in rec.get("/inquiries/?due=1").data, "due follow-up listed")
 check(b"Lead One" in rec.get(f"/students/add?inquiry_id={iid}").data, "convert form prefilled")
+check(b"9876 5432 1098" in rec.get(f"/students/add?inquiry_id={iid}").data, "inquiry aadhar prefilled in student form")
 rec.post(f"/inquiries/{iid}/followup", data={"note": "Called", "status": "Interested", "next_follow_up": today}, follow_redirects=True)
-rec.post("/students/add", data={"inquiry_id": iid, "name": "Lead One", "phone": "9111111111", "admission_date": today, "course_id": cid,
+rec.post("/students/add", data={"inquiry_id": iid, "name": "Lead One", "phone": "9111111111", "alt_phone": "9111111112",
+      "dob": "2001-08-15", "aadhar_no": "987654321098", "address": "Market Yard, Pune", "admission_date": today, "course_id": cid,
       "total_fees": "3000", "discount": "0", "initial_amount": "0", "payment_mode": "Cash"}, follow_redirects=True)
 with app.app_context():
     iq = db.session.get(Inquiry, iid)
     check(iq.status == "Joined" and iq.converted_student_id, "inquiry converted to student")
+    conv_student = db.session.get(Student, iq.converted_student_id)
+    check(conv_student.alt_phone == "9111111112" and conv_student.aadhar_no == "9876 5432 1098", "converted student preserved inquiry fields")
 
 # batch capacity
 with app.app_context():

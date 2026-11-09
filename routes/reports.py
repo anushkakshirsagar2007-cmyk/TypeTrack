@@ -36,7 +36,7 @@ def build(kind, a):
             qs = qs.filter(Student.admission_date <= end)
         rows = [[s.student_code, s.name, s.phone, s.course.name, s.batch.name if s.batch else "-", f"{s.admission_date:%d-%m-%Y}",
                  m(s.net_fees), m(s.paid), m(s.balance), s.payment_status, "Active" if s.active else "Inactive"]
-                for s in qs.order_by(Student.name) if _match(q, s.name, s.phone, s.student_code)]
+                for s in qs.order_by(Student.name) if _match(q, s.name, s.phone, s.student_code, s.alt_phone, s.aadhar_no)]
         return ["ID", "Name", "Phone", "Course", "Batch", "Admission", "Net Fees", "Paid", "Balance", "Payment", "Status"], rows
     if kind == "batches":
         rows = [[b.name, b.course.name, b.instructor or "-", b.timing, f"{b.start_date:%d-%m-%Y}", b.capacity, b.filled,
@@ -53,7 +53,7 @@ def build(kind, a):
             qs = qs.filter(Inquiry.inquiry_date <= end)
         rows = [[i.name, i.phone, i.course.name if i.course else "-", i.source or "-", f"{i.inquiry_date:%d-%m-%Y}",
                  f"{i.follow_up_date:%d-%m-%Y}" if i.follow_up_date else "-", i.status, i.remarks or ""]
-                for i in qs.order_by(Inquiry.inquiry_date.desc()) if _match(q, i.name, i.phone)]
+                for i in qs.order_by(Inquiry.inquiry_date.desc()) if _match(q, i.name, i.phone, i.alt_phone, i.aadhar_no)]
         return ["Name", "Phone", "Course", "Source", "Inquiry Date", "Follow-up", "Status", "Remarks"], rows
     if kind == "attendance":
         qs = Student.query.options(selectinload(Student.attendance_records), joinedload(Student.batch))

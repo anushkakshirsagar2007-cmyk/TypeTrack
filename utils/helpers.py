@@ -52,6 +52,18 @@ def valid_phone(p):
     return bool(re.fullmatch(r"\+?[\d\s\-]+", p or "")) and 10 <= len(digits) <= 13
 
 
+def valid_aadhar(a):
+    digits = re.sub(r"\D", "", a or "")
+    return bool(re.fullmatch(r"[\d\s\-]+", (a or "").strip())) and len(digits) == 12
+
+
+def format_aadhar(a):
+    digits = re.sub(r"\D", "", str(a or ""))
+    if len(digits) == 12:
+        return f"{digits[:4]} {digits[4:8]} {digits[8:]}"
+    return (a or "").strip()
+
+
 def valid_email(e):
     return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", e or ""))
 

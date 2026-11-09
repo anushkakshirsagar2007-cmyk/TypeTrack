@@ -9,9 +9,11 @@
 {% if inquiry %}<input type="hidden" name="inquiry_id" value="{{ inquiry.id }}">{% endif %}
 <div class="card-body"><div class="row g-3">
   {{ field('Student name', 'name', (d.name if d else (s.name if s else '')), required=True, placeholder='Full name') }}
-  {{ field('Phone number', 'phone', (d.phone if d else (s.phone if s else '')), 'tel', True, '10-digit mobile number') }}
+  {{ field('Contact no.', 'phone', (d.phone if d else (s.phone if s else '')), 'tel', True, '10-digit mobile number') }}
+  {{ field('Alternate contact no.', 'alt_phone', (d.alt_phone if d else (s.alt_phone if s else '')), 'tel', placeholder='Optional second contact number') }}
   {{ field('Email', 'email', (d.email if d else (s.email if s else '')), 'email', placeholder='Optional') }}
   {{ field('Date of birth', 'dob', (d.dob if d else (s.dob if s else '')), 'date', attrs='max="' ~ today ~ '"') }}
+  {{ field('Aadhaar card no.', 'aadhar_no', (d.aadhar_no if d else (s.aadhar_no if s else '')), placeholder='12-digit Aadhaar number') }}
   {{ field('Admission date', 'admission_date', (d.admission_date if d and d.admission_date else (s.admission_date if s else today)), 'date', True) }}
   {{ select('Course', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, (d.course_id if d else (s.course_id if s else '')), True, attrs='id="course_id"') }}
   <div class="col-md-6"><label class="form-label" for="batch_id">Batch</label>

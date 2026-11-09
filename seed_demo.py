@@ -38,7 +38,11 @@ def seed():
     for idx, name in enumerate(NAMES):
         b = batches[idx % 2]
         c = next(x for x in courses if x.id == b.course_id)
-        s = Student(student_code=next_student_code(), name=name, phone=f"98{random.randint(10000000, 99999999)}", course_id=c.id,
+        s = Student(student_code=next_student_code(), name=name, phone=f"98{random.randint(10000000, 99999999)}",
+                    alt_phone=f"91{random.randint(10000000, 99999999)}",
+                    dob=today - timedelta(days=random.randint(6500, 9000)),
+                    aadhar_no=f"5{random.randint(100, 999)} {random.randint(1000, 9999)} {random.randint(1000, 9999)}",
+                    course_id=c.id,
                     batch_id=b.id, admission_date=today - timedelta(days=random.randint(5, 80)), total_fees=c.fees,
                     discount=random.choice([0, 0, 200, 500]), address="Pune")
         db.session.add(s)
@@ -53,7 +57,12 @@ def seed():
                 db.session.add(Attendance(student_id=s.id, batch_id=b.id, date=d, marked_by=owner.id,
                                           status=random.choices(["Present", "Absent", "Leave"], [8, 1, 1])[0]))
     for n, st, off in [("Ketan Rane", "New", 0), ("Madhuri Sawant", "Contacted", -1), ("Tushar Mane", "Interested", 2), ("Rutuja Bhise", "Not Interested", None)]:
-        i = Inquiry(name=n, phone=f"97{random.randint(10000000, 99999999)}", course_id=courses[0].id, source="Walk-in", status=st,
+        i = Inquiry(name=n, phone=f"97{random.randint(10000000, 99999999)}",
+                    alt_phone=f"96{random.randint(10000000, 99999999)}",
+                    dob=today - timedelta(days=7000),
+                    aadhar_no=f"6{random.randint(100, 999)} {random.randint(1000, 9999)} {random.randint(1000, 9999)}",
+                    address="Pune",
+                    course_id=courses[0].id, source="Walk-in", status=st,
                     inquiry_date=today - timedelta(days=3), follow_up_date=None if off is None else today + timedelta(days=off), preferred_timing="Evening")
         db.session.add(i)
         db.session.flush()

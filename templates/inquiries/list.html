@@ -5,7 +5,7 @@
 <div class="page-head"><div><h1>Inquiries</h1><p>{{ p.total }} inquir{{ 'y' if p.total == 1 else 'ies' }}</p></div>
   <a class="btn btn-primary btn-lg" href="{{ url_for('inquiries.add') }}"><i class="bi bi-plus-lg"></i> New inquiry</a></div>
 <div class="card mb-3"><div class="card-body"><form class="row g-2" method="get" data-no-loader>
-  <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name or phone"></div>
+  <div class="col-lg-3"><input class="form-control" name="q" value="{{ f.get('q','') }}" placeholder="Search name, phone or Aadhaar"></div>
   {{ select('', 'status', statuses|zip(statuses)|list, f.get('status',''), col='col-6 col-lg-2', blank='All statuses') }}
   {{ select('', 'source', sources|zip(sources)|list, f.get('source',''), col='col-6 col-lg-2', blank='All sources') }}
   {{ select('', 'course_id', courses|map(attribute='id')|zip(courses|map(attribute='name'))|list, f.get('course_id',''), col='col-6 col-lg-2', blank='All courses') }}
@@ -15,7 +15,7 @@
 <div class="card"><div class="card-body">
 {% if p.items %}<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Name</th><th>Course</th><th>Source</th><th>Inquiry date</th><th>Follow-up</th><th>Status</th><th></th></tr></thead><tbody>
 {% for i in p.items %}<tr>
- <td><a class="fw-semibold" href="{{ url_for('inquiries.view', id=i.id) }}">{{ i.name }}</a><br><small class="text-muted">{{ i.phone }}</small></td>
+ <td><a class="fw-semibold" href="{{ url_for('inquiries.view', id=i.id) }}">{{ i.name }}</a><br><small class="text-muted">{{ i.phone }}{% if i.alt_phone %} &middot; {{ i.alt_phone }}{% endif %}</small></td>
  <td>{{ i.course.name if i.course else '-' }}<br><small class="text-muted">{{ i.preferred_timing or '' }}</small></td><td>{{ i.source or '-' }}</td><td>{{ i.inquiry_date|dmy }}</td>
  <td class="{{ 'text-danger fw-semibold' if i.is_open and i.follow_up_date and i.follow_up_date <= today }}">{{ i.follow_up_date|dmy }}</td><td>{{ badge(i.status) }}</td>
  <td class="text-end text-nowrap"><a class="btn btn-sm btn-light" href="{{ url_for('inquiries.view', id=i.id) }}" title="View"><i class="bi bi-eye"></i></a>

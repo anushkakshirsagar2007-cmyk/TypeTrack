@@ -8,7 +8,7 @@ from extensions import db
 from models import Student, Course, Batch, Inquiry, InquiryFollowup, Payment, PAYMENT_MODES
 from services import record_payment
 from utils.helpers import (login_guard, owner_required, parse_date, parse_money, valid_phone, valid_email,
-                           next_student_code)
+                           next_student_code, valid_aadhar, format_aadhar)
 
 bp = Blueprint("students", __name__, url_prefix="/students")
 bp.before_request(login_guard)
@@ -24,7 +24,8 @@ def index():
     q = Student.query.options(selectinload(Student.payments), joinedload(Student.course), joinedload(Student.batch))
     if a.get("q", "").strip():
         like = f"%{a['q'].strip()}%"
-        q = q.filter(or_(Student.name.ilike(like), Student.student_code.ilike(like), Student.phone.like(like)))
+        q = q.filter(or_(Student.name.ilike(like), Student.student_code.ilike(like), Student.phone.like(like),
+                         Student.alt_phone.like(like), Student.aadhar_no.like(like)))
     if a.get("course_id", type=int):
         q = q.filter(Student.course_id == a.get("course_id", type=int))
     if a.get("batch_id", type=int):
@@ -46,8 +47,12 @@ def index():
 
 def _collect(student=None):
     f = request.form
-    d = {"name": f.get("name", "").strip(), "phone": f.get("phone", "").strip(), "email": f.get("email", "").strip() or None,
+    raw_aadhar = f.get("aadhar_no", "").strip()
+    d = {"name": f.get("name", "").strip(), "phone": f.get("phone", "").strip(),
+         "alt_phone": f.get("alt_phone", "").strip() or None,
+         "email": f.get("email", "").strip() or None,
          "address": f.get("address", "").strip() or None, "dob": parse_date(f.get("dob")),
+         "aadhar_no": format_aadhar(raw_aadhar) if raw_aadhar else None,
          "admission_date": parse_date(f.get("admission_date")), "course_id": f.get("course_id", type=int),
          "batch_id": f.get("batch_id", type=int) or None, "total_fees": parse_money(f.get("total_fees")),
          "discount": parse_money(f.get("discount") or "0"), "active": f.get("active", "1") == "1"}
@@ -56,12 +61,16 @@ def _collect(student=None):
         e.append("Student name is required.")
     if not valid_phone(d["phone"]):
         e.append("Enter a valid phone number (10 to 13 digits).")
+    if d["alt_phone"] and not valid_phone(d["alt_phone"]):
+        e.append("Enter a valid alternate phone number (10 to 13 digits) or leave it empty.")
     if d["email"] and not valid_email(d["email"]):
         e.append("Enter a valid email address or leave it empty.")
     if f.get("dob") and not d["dob"]:
         e.append("Date of birth is not valid.")
     if d["dob"] and d["dob"] >= date.today():
         e.append("Date of birth must be in the past.")
+    if raw_aadhar and not valid_aadhar(raw_aadhar):
+        e.append("Enter a valid 12-digit Aadhaar card number or leave it empty.")
     if not d["admission_date"]:
         e.append("Admission date is required.")
     course = db.session.get(Course, d["course_id"]) if d["course_id"] else None
@@ -130,7 +139,16 @@ def add():
                 current_app.logger.exception("Could not add student")
                 flash("Could not save the student. Please try again.", "danger")
     elif inquiry:
-        data = {"name": inquiry.name, "phone": inquiry.phone, "email": inquiry.email, "course_id": inquiry.course_id}
+        data = {
+            "name": inquiry.name,
+            "phone": inquiry.phone,
+            "alt_phone": inquiry.alt_phone,
+            "email": inquiry.email,
+            "dob": inquiry.dob,
+            "aadhar_no": inquiry.aadhar_no,
+            "address": inquiry.address,
+            "course_id": inquiry.course_id,
+        }
     return render_template("students/form.html", s=None, d=data, inquiry=inquiry, **_form_ctx())
 
 

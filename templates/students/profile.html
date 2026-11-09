@@ -15,8 +15,13 @@
 <div class="row g-3 mb-3">
  <div class="col-lg-5"><div class="card h-100"><div class="card-body"><h2 class="card-title">Personal details</h2>
   <dl class="detail">
-   <dt>Phone</dt><dd>{{ s.phone }}</dd><dt>Email</dt><dd>{{ s.email or '-' }}</dd><dt>Date of birth</dt><dd>{{ s.dob|dmy }}</dd>
-   <dt>Address</dt><dd>{{ s.address or '-' }}</dd><dt>Admission date</dt><dd>{{ s.admission_date|dmy }}</dd></dl></div></div></div>
+   <dt>Contact no.</dt><dd>{{ s.phone }}</dd>
+   <dt>Alternate contact</dt><dd>{{ s.alt_phone or '-' }}</dd>
+   <dt>Email</dt><dd>{{ s.email or '-' }}</dd>
+   <dt>Date of birth</dt><dd>{{ s.dob|dmy }}</dd>
+   <dt>Aadhaar no.</dt><dd>{{ s.aadhar_no or '-' }}</dd>
+   <dt>Address</dt><dd>{{ s.address or '-' }}</dd>
+   <dt>Admission date</dt><dd>{{ s.admission_date|dmy }}</dd></dl></div></div></div>
  <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="card-title">Course and batch</h2>
   <dl class="detail"><dt>Course</dt><dd>{{ s.course.name }}</dd>
    <dt>Batch</dt><dd>{% if s.batch %}<a href="{{ url_for('batches.view', id=s.batch.id) }}">{{ s.batch.name }}</a>{% else %}Not assigned{% endif %}</dd>
