@@ -123,9 +123,22 @@ def create_app(overrides=None):
 
     @app.errorhandler(500)
     def e500(e):
+        app.logger.exception("Internal server error: %s", e)
         db.session.rollback()
         return render_template("error.html", code=500, title="Something went wrong",
                                msg="Please try again. If the problem continues, contact your administrator."), 500
+
+    _db_initialized = False
+
+    @app.before_request
+    def auto_ensure_database():
+        nonlocal _db_initialized
+        if not _db_initialized and not app.config.get("TESTING"):
+            try:
+                ensure_database(app)
+                _db_initialized = True
+            except Exception as ex:
+                app.logger.warning("Auto-ensure database warning: %s", ex)
 
     # ---- CLI ----
     @app.cli.command("init-db")
@@ -186,32 +199,46 @@ def create_app(overrides=None):
 def ensure_database(app):
     """Create tables and the first owner if this PC has no data yet. Returns the new username, or None."""
     from models import Institute, User
-    from sqlalchemy import inspect, text
+    from sqlalchemy import text
 
     with app.app_context():
         db.create_all()
         try:
-            inspector = inspect(db.engine)
-            table_names = inspector.get_table_names()
-            if "students" in table_names:
-                cols = {c["name"] for c in inspector.get_columns("students")}
-                if "alt_phone" not in cols:
-                    db.session.execute(text("ALTER TABLE students ADD COLUMN alt_phone VARCHAR(20)"))
-                if "aadhar_no" not in cols:
-                    db.session.execute(text("ALTER TABLE students ADD COLUMN aadhar_no VARCHAR(20)"))
-            if "inquiries" in table_names:
-                cols = {c["name"] for c in inspector.get_columns("inquiries")}
-                if "alt_phone" not in cols:
-                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN alt_phone VARCHAR(20)"))
-                if "dob" not in cols:
-                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN dob DATE"))
-                if "aadhar_no" not in cols:
-                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN aadhar_no VARCHAR(20)"))
-                if "address" not in cols:
-                    db.session.execute(text("ALTER TABLE inquiries ADD COLUMN address TEXT"))
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
+            engine = db.engine
+            dialect = engine.dialect.name
+            if dialect == "postgresql":
+                with engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS alt_phone VARCHAR(20);"))
+                    conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS aadhar_no VARCHAR(20);"))
+                    conn.execute(text("ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS alt_phone VARCHAR(20);"))
+                    conn.execute(text("ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS dob DATE;"))
+                    conn.execute(text("ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS aadhar_no VARCHAR(20);"))
+                    conn.execute(text("ALTER TABLE inquiries ADD COLUMN IF NOT EXISTS address TEXT;"))
+                    conn.commit()
+            else:
+                from sqlalchemy import inspect
+                inspector = inspect(engine)
+                table_names = inspector.get_table_names()
+                with engine.connect() as conn:
+                    if "students" in table_names:
+                        cols = {c["name"] for c in inspector.get_columns("students")}
+                        if "alt_phone" not in cols:
+                            conn.execute(text("ALTER TABLE students ADD COLUMN alt_phone VARCHAR(20)"))
+                        if "aadhar_no" not in cols:
+                            conn.execute(text("ALTER TABLE students ADD COLUMN aadhar_no VARCHAR(20)"))
+                    if "inquiries" in table_names:
+                        cols = {c["name"] for c in inspector.get_columns("inquiries")}
+                        if "alt_phone" not in cols:
+                            conn.execute(text("ALTER TABLE inquiries ADD COLUMN alt_phone VARCHAR(20)"))
+                        if "dob" not in cols:
+                            conn.execute(text("ALTER TABLE inquiries ADD COLUMN dob DATE"))
+                        if "aadhar_no" not in cols:
+                            conn.execute(text("ALTER TABLE inquiries ADD COLUMN aadhar_no VARCHAR(20)"))
+                        if "address" not in cols:
+                            conn.execute(text("ALTER TABLE inquiries ADD COLUMN address TEXT"))
+                    conn.commit()
+        except Exception as e:
+            app.logger.warning("Database schema migration error: %s", e)
 
         if not Institute.query.first():
             institute = Institute(
